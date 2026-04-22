@@ -20,6 +20,29 @@ Route::get('reset-password/{token}', [ResetPasswordController::class,'showResetF
 Route::post('reset-password', [ResetPasswordController::class,'resetPassword'])->name('reset.password');
 
 
+// Register Form
+Route::get('register', function () {
+    return view('auth.register');
+})->name('register');
+
+// Register POST
+Route::post('register', function (\Illuminate\Http\Request $request) {
+
+    $request->validate([
+        'name' => 'required',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|min:8|confirmed'
+    ]);
+
+    \App\Models\User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => bcrypt($request->password)
+    ]);
+
+    return redirect('/login')->with('success', 'Registration successful! Please login.');
+});
+
 // -------------------
 // LOGIN ROUTES
 // -------------------

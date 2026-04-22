@@ -23,16 +23,19 @@ class ForgotPasswordController extends Controller
 
         $token = Str::random(64);
 
-        DB::table('password_resets')->insert([
-            'email' => $request->email,
+        // Updated: Prevent duplicate tokens
+        DB::table('password_resets')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => $token,
+                'created_at' => now()
+            ]
+        );
+
+        $action_link = route('reset.password.form', [
             'token' => $token,
-            'created_at' => now()
+            'email' => $request->email
         ]);
-
-        $action_link = route('reset.password.form', ['token' => $token, 'email' => $request->email]);
-
-        $body = "We have received a request to reset your password. 
-        Click the link below to reset it: <a href='$action_link'>Reset Password</a>";
 
         Mail::send('auth.email-forgot', [
             'token' => $token,
@@ -42,7 +45,6 @@ class ForgotPasswordController extends Controller
             $message->to($request->email);
             $message->subject('Reset Password Notification');
         });
-
 
         return back()->with('success', 'We have emailed your password reset link!');
     }

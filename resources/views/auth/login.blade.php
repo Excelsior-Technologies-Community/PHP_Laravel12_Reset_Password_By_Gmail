@@ -15,6 +15,13 @@
                 </div>
                 <div class="card-body">
 
+                    <!--  Show success message -->
+                    @if(session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
                     <!-- Show error message if login fails -->
                     @if(session('fail'))
                         <div class="alert alert-danger">
@@ -40,6 +47,8 @@
 
                     <div class="mt-3 text-center">
                         <a href="{{ route('forgot.password.form') }}">Forgot Password?</a>
+                        <br>
+                        <a href="{{ route('register') }}">Don't have an account? Register</a>
                     </div>
 
                 </div>
