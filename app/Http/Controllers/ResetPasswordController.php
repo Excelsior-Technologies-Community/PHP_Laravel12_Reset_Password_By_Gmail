@@ -9,25 +9,29 @@ use App\Models\User;
 
 class ResetPasswordController extends Controller
 {
-    // Show the reset password form
     public function showResetForm(Request $request, $token)
     {
-        // Pass token and email from query string to view
-        $email = $request->query('email'); 
+        $email = $request->query('email');
         return view('auth.forget_password_link', compact('token', 'email'));
     }
 
-    // Handle the password reset form submission
     public function resetPassword(Request $request)
     {
-        // Validate only password and token (email comes hidden)
+        //  Password Strength Validation
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|min:8|confirmed',
+            'password' => [
+                'required',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
+            ],
             'token' => 'required'
+        ], [
+            'password.regex' => 'Password must contain at least one uppercase, one lowercase, and one number.'
         ]);
 
-        // Check if token exists for this email
+        // Check token
         $check_token = DB::table('password_resets')
             ->where('email', $request->email)
             ->where('token', $request->token)
@@ -37,14 +41,20 @@ class ResetPasswordController extends Controller
             return back()->with('fail','Invalid token!');
         }
 
-        // Update user password
+        //  Token Expiry (15 minutes)
+        if (now()->diffInMinutes($check_token->created_at) > 15) {
+            return back()->with('fail','Token expired! Please request a new link.');
+        }
+
+        // Update password
         User::where('email', $request->email)
             ->update(['password' => Hash::make($request->password)]);
 
-        // Delete used token
-        DB::table('password_resets')->where('email', $request->email)->delete();
+        // Delete token after use
+        DB::table('password_resets')
+            ->where('email', $request->email)
+            ->delete();
 
-        // Redirect to login page with success message
-        return redirect('/forgot-password')->with('success','Your password has been changed successfully!');
+        return redirect('/login')->with('success','Password reset successful! Please login.');
     }
 }
