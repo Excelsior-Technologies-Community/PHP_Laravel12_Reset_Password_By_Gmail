@@ -1,8 +1,12 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResetPasswordController;
 
 
@@ -10,69 +14,36 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
-// Forgot Password
 Route::get('forgot-password', [ForgotPasswordController::class,'showForgotForm'])->name('forgot.password.form');
 Route::post('forgot-password', [ForgotPasswordController::class,'sendResetLink'])->name('forgot.password');
 
-// Reset Password
 Route::get('reset-password/{token}', [ResetPasswordController::class,'showResetForm'])->name('reset.password.form');
 Route::post('reset-password', [ResetPasswordController::class,'resetPassword'])->name('reset.password');
 
+Route::middleware('guest')->group(function () {
+    Route::get('register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('register', [AuthController::class, 'register']);
 
-// Register Form
-Route::get('register', function () {
-    return view('auth.register');
-})->name('register');
-
-// Register POST
-Route::post('register', function (\Illuminate\Http\Request $request) {
-
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|min:8|confirmed'
-    ]);
-
-    \App\Models\User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => bcrypt($request->password)
-    ]);
-
-    return redirect('/login')->with('success', 'Registration successful! Please login.');
+    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login']);
 });
 
-// -------------------
-// LOGIN ROUTES
-// -------------------
+Route::middleware('auth')->group(function () {
+    Route::get('email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware('signed')
+        ->name('verification.verify');
+    Route::post('email/verification-notification', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 
-// Show Login Form
-Route::get('login', function() {
-    return view('auth.login');
-})->name('login');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-// Login POST
-Route::post('login', function(\Illuminate\Http\Request $request){
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required'
-    ]);
-
-    if(Auth::attempt($request->only('email','password'))){
-        return redirect('/dashboard'); // Redirect after successful login
-    } else {
-        return back()->with('fail', 'Invalid email or password');
-    }
+    Route::middleware('verified')->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('change-password', [ProfileController::class, 'editPassword'])->name('password.edit');
+        Route::put('change-password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    });
 });
-
-// Dashboard (protected page)
-Route::get('dashboard', function(){
-    return "Login Successful! You are now on the dashboard.";
-})->middleware('auth');
-
-// Logout (optional)
-Route::get('logout', function(){
-    Auth::logout();
-    return redirect('/login');
-})->name('logout');

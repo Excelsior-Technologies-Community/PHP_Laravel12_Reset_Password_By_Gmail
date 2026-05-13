@@ -1,45 +1,35 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+@extends('layouts.app')
 
-<div class="container mt-5">
+@section('title', 'Login')
+
+@section('content')
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header text-center bg-primary text-white">
-                    <h4>Login</h4>
+            <div class="panel shadow-sm">
+                <div class="p-4 border-bottom text-center">
+                    <h4 class="mb-1">Login</h4>
+                    <p class="text-muted mb-0">Access your account dashboard.</p>
                 </div>
-                <div class="card-body">
-
-                    <!--  Show success message -->
-                    @if(session('success'))
-                        <div class="alert alert-success">
-                            {{ session('success') }}
-                        </div>
+                <div class="p-4">
+                    @if($errors->any())
+                        <div class="alert alert-danger">{{ $errors->first() }}</div>
                     @endif
-
-                    <!-- Show error message if login fails -->
-                    @if(session('fail'))
-                        <div class="alert alert-danger">
-                            {{ session('fail') }}
-                        </div>
-                    @endif
-
                     <form action="{{ route('login') }}" method="POST">
                         @csrf
 
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="Enter your email" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Password</label>
                             <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="remember" value="1" class="form-check-input" id="remember">
+                            <label class="form-check-label" for="remember">Remember me</label>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">Login</button>
@@ -55,7 +45,4 @@
             </div>
         </div>
     </div>
-</div>
-
-</body>
-</html>
+@endsection

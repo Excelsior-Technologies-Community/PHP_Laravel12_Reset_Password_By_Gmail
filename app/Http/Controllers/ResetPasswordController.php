@@ -43,6 +43,10 @@ class ResetPasswordController extends Controller
 
         //  Token Expiry (15 minutes)
         if (now()->diffInMinutes($check_token->created_at) > 15) {
+            DB::table('password_resets')
+                ->where('email', $request->email)
+                ->delete();
+
             return back()->with('fail','Token expired! Please request a new link.');
         }
 
