@@ -1,19 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+@extends('layouts.app')
 
-<div class="container mt-5">
+@section('title', 'Register')
+
+@section('content')
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header text-center bg-success text-white">
-                    <h4>Register</h4>
+            <div class="panel shadow-sm">
+                <div class="p-4 border-bottom text-center">
+                    <h4 class="mb-1">Register</h4>
+                    <p class="text-muted mb-0">Create an account and verify your email.</p>
                 </div>
-                <div class="card-body">
+                <div class="p-4">
 
                     @if($errors->any())
                         <div class="alert alert-danger">
@@ -24,11 +21,12 @@
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
-                        <input type="text" name="name" class="form-control mb-3" placeholder="Name" required>
-                        <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
+                        <input type="text" name="name" value="{{ old('name') }}" class="form-control mb-3" placeholder="Name" required>
+                        <input type="email" name="email" value="{{ old('email') }}" class="form-control mb-3" placeholder="Email" required>
 
                         <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
                         <input type="password" name="password_confirmation" class="form-control mb-3" placeholder="Confirm Password" required>
+                        <small class="d-block text-muted mb-3">Password must contain uppercase, lowercase and number.</small>
 
                         <button class="btn btn-success w-100">Register</button>
                     </form>
@@ -41,7 +39,4 @@
             </div>
         </div>
     </div>
-</div>
-
-</body>
-</html>
+@endsection

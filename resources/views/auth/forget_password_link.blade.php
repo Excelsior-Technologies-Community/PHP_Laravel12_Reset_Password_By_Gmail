@@ -1,27 +1,16 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.app')
 
-<head>
-    <title>Reset Password</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+@section('title', 'Reset Password')
 
-<body class="bg-light">
-
-    <div class="container mt-5">
+@section('content')
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header text-center bg-success text-white">
-                        <h4>Reset Your Password</h4>
+                <div class="panel shadow-sm">
+                    <div class="p-4 border-bottom text-center">
+                        <h4 class="mb-1">Reset Your Password</h4>
+                        <p class="text-muted mb-0">This link is valid for 15 minutes.</p>
                     </div>
-                    <div class="card-body">
-
-                        @if(session('fail'))
-                        <div class="alert alert-danger">
-                            {{ session('fail') }}
-                        </div>
-                        @endif
+                    <div class="p-4">
 
                         <form action="{{ route('reset.password') }}" method="POST">
                             @csrf
@@ -61,8 +50,4 @@
                 </div>
             </div>
         </div>
-    </div>
-
-</body>
-
-</html>
+@endsection
