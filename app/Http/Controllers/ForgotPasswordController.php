@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
 {
-    private const RESET_LINK_THROTTLE_SECONDS = 60;
-
     public function showForgotForm()
     {
         return view('auth.forget_password');
@@ -18,41 +18,40 @@ class ForgotPasswordController extends Controller
 
     public function sendResetLink(Request $request)
     {
+          \Log::info('Forgot password submitted email: "' . $request->email . '"');
+    \Log::info('Email length: ' . strlen($request->email));
+    
         $request->validate([
             'email' => 'required|email|exists:users,email',
         ]);
 
-        $existingToken = DB::table('password_resets')
-            ->where('email', $request->email)
-            ->first();
-
-        if ($existingToken && now()->diffInSeconds($existingToken->created_at) < self::RESET_LINK_THROTTLE_SECONDS) {
-            $waitSeconds = self::RESET_LINK_THROTTLE_SECONDS - now()->diffInSeconds($existingToken->created_at);
-
-            return back()
-                ->withInput($request->only('email'))
-                ->with('fail', 'Please wait '.$waitSeconds.' seconds before requesting another reset link.');
-        }
-
         $token = Str::random(64);
 
-        // Updated: Prevent duplicate tokens
-        DB::table('password_resets')->updateOrInsert(
-            ['email' => $request->email],
-            [
-                'token' => $token,
-                'created_at' => now()
-            ]
-        );
+        // Delete old tokens for this email
+        DB::table('password_resets')->where('email', $request->email)->delete();
 
-        Mail::send('auth.email-forgot', [
+        DB::table('password_resets')->insert([
+            'email' => $request->email,
             'token' => $token,
-            'email' => $request->email
-        ], function ($message) use ($request): void {
-            $message->to($request->email);
-            $message->subject('Reset Password Notification');
-        });
+            'created_at' => now()
+        ]);
 
-        return back()->with('success', 'We have emailed your password reset link!');
+        $action_link = route('reset.password.form', ['token' => $token, 'email' => $request->email]);
+
+        try {
+            Mail::send('auth.email-forgot', [
+                'token' => $token,
+                'email' => $request->email,
+                'action_link' => $action_link
+            ], function ($message) use ($request) {
+                $message->from(config('mail.from.address'), config('mail.from.name'));
+                $message->to($request->email);
+                $message->subject('Reset Password Notification');
+            });
+
+            return back()->with('success', 'We have emailed your password reset link!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to send email. Please try again.');
+        }
     }
 }

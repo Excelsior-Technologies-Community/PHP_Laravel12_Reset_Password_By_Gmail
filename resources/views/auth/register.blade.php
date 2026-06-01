@@ -3,40 +3,58 @@
 @section('title', 'Register')
 
 @section('content')
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="panel shadow-sm">
-                <div class="p-4 border-bottom text-center">
-                    <h4 class="mb-1">Register</h4>
-                    <p class="text-muted mb-0">Create an account and verify your email.</p>
-                </div>
-                <div class="p-4">
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Register New Account</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('register') }}">
+                    @csrf
 
-                    @if($errors->any())
-                        <div class="alert alert-danger">
-                            {{ $errors->first() }}
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('register') }}">
-                        @csrf
-
-                        <input type="text" name="name" value="{{ old('name') }}" class="form-control mb-3" placeholder="Name" required>
-                        <input type="email" name="email" value="{{ old('email') }}" class="form-control mb-3" placeholder="Email" required>
-
-                        <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
-                        <input type="password" name="password_confirmation" class="form-control mb-3" placeholder="Confirm Password" required>
-                        <small class="d-block text-muted mb-3">Password must contain uppercase, lowercase and number.</small>
-
-                        <button class="btn btn-success w-100">Register</button>
-                    </form>
-
-                    <div class="mt-3 text-center">
-                        <a href="/login">Already have account? Login</a>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                               id="name" name="name" value="{{ old('name') }}" required autofocus>
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                               id="email" name="email" value="{{ old('email') }}" required>
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                               id="password" name="password" required>
+                        <small class="text-muted">Minimum 8 characters</small>
+                        @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" 
+                               id="password_confirmation" name="password_confirmation" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <a href="{{ route('login') }}">Already have an account? Login here</a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 @endsection
