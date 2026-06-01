@@ -1,26 +1,27 @@
 @extends('layouts.app')
 
-@section('title', 'Reset Password')
+@section('title', 'Change Password')
 
 @section('content')
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card shadow">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Create New Password</h4>
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">Change Password</h4>
             </div>
             <div class="card-body">
-                @if(session('error'))
-                    <div class="alert alert-danger">
-                        {{ session('error') }}
-                    </div>
-                @endif
-
-                <form method="POST" action="{{ route('reset.password') }}">
+                <form method="POST" action="{{ route('password.update') }}">
                     @csrf
+                    @method('PUT')
 
-                    <input type="hidden" name="token" value="{{ $token }}">
-                    <input type="hidden" name="email" value="{{ $email ?? request('email') }}">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control @error('current_password') is-invalid @enderror" 
+                               id="current_password" name="current_password" required>
+                        @error('current_password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                     <div class="mb-3">
                         <label for="password" class="form-label">New Password</label>
@@ -38,7 +39,8 @@
                                id="password_confirmation" name="password_confirmation" required>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100">Reset Password</button>
+                    <button type="submit" class="btn btn-warning">Change Password</button>
+                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">Cancel</a>
                 </form>
             </div>
         </div>

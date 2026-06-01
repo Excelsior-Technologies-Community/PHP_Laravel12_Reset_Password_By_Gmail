@@ -9,56 +9,46 @@ use App\Models\User;
 
 class ResetPasswordController extends Controller
 {
-    public function showResetForm(Request $request, $token)
+    // Show the reset password form (GET request)
+    public function showResetForm($token)
     {
-        $email = $request->query('email');
+        // Get email from query string
+        $email = request()->get('email');
+        
         return view('auth.forget_password_link', compact('token', 'email'));
     }
 
+    // Handle the password reset (POST request)
     public function resetPassword(Request $request)
     {
-        //  Password Strength Validation
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'password' => [
-                'required',
-                'min:8',
-                'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
-            ],
+            'password' => 'required|min:8|confirmed',
             'token' => 'required'
-        ], [
-            'password.regex' => 'Password must contain at least one uppercase, one lowercase, and one number.'
         ]);
 
-        // Check token
         $check_token = DB::table('password_resets')
             ->where('email', $request->email)
             ->where('token', $request->token)
             ->first();
 
         if (!$check_token) {
-            return back()->with('fail','Invalid token!');
+            return back()->with('error', 'Invalid or expired token! Please request a new reset link.');
         }
 
-        //  Token Expiry (15 minutes)
-        if (now()->diffInMinutes($check_token->created_at) > 15) {
-            DB::table('password_resets')
-                ->where('email', $request->email)
-                ->delete();
-
-            return back()->with('fail','Token expired! Please request a new link.');
+        // Check if token is expired (60 minutes)
+        if (now()->diffInMinutes($check_token->created_at) > 60) {
+            DB::table('password_resets')->where('email', $request->email)->delete();
+            return back()->with('error', 'Reset link has expired! Please request a new one.');
         }
 
         // Update password
         User::where('email', $request->email)
             ->update(['password' => Hash::make($request->password)]);
 
-        // Delete token after use
-        DB::table('password_resets')
-            ->where('email', $request->email)
-            ->delete();
+        // Delete the token
+        DB::table('password_resets')->where('email', $request->email)->delete();
 
-        return redirect('/login')->with('success','Password reset successful! Please login.');
+        return redirect('/login')->with('success', 'Password reset successfully! Please login with your new password.');
     }
 }

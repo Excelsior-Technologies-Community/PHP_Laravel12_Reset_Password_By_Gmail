@@ -3,45 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', config('app.name', 'Laravel Auth'))</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Laravel App')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f5f7fb; }
-        .auth-shell { min-height: 100vh; display: flex; align-items: center; }
-        .topbar { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
-        .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; }
-        .stat { border-left: 4px solid #0d6efd; }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #f5f5f5;
+            text-align: center;
+            padding: 10px 0;
+        }
     </style>
 </head>
 <body>
-@auth
-    <nav class="topbar py-3">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-semibold text-decoration-none text-dark" href="{{ route('dashboard') }}">Account Center</a>
-            <div class="d-flex gap-2 align-items-center">
-                <a class="btn btn-sm btn-outline-primary" href="{{ route('profile.edit') }}">Profile</a>
-                <a class="btn btn-sm btn-outline-secondary" href="{{ route('password.edit') }}">Password</a>
-                <form action="{{ route('logout') }}" method="POST" class="m-0">
-                    @csrf
-                    <button class="btn btn-sm btn-danger">Logout</button>
-                </form>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url('/') }}">Laravel Reset Password</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    @guest
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('register') }}">Register</a>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('profile.edit') }}">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-link nav-link" style="display: inline; cursor: pointer;">Logout</button>
+                            </form>
+                        </li>
+                    @endguest
+                </ul>
             </div>
         </div>
     </nav>
-@endauth
 
-<main class="@auth py-4 @else auth-shell @endauth">
-    <div class="container">
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+    <main class="py-4">
+        <div class="container">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-        @if(session('fail'))
-            <div class="alert alert-danger">{{ session('fail') }}</div>
-        @endif
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-        @yield('content')
-    </div>
-</main>
+            @if(session('info'))
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ session('info') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @yield('content')
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <span class="text-muted">Laravel Password Reset System &copy; {{ date('Y') }}</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

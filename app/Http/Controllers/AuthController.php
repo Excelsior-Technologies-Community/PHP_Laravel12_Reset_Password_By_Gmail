@@ -2,96 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+// Remove this: use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
-    private const MAX_LOGIN_ATTEMPTS = 5;
-    private const LOCK_MINUTES = 15;
-
+    // Show Registration Form
     public function showRegister()
     {
         return view('auth.register');
     }
 
+    // Handle Registration
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'],
-        ], [
-            'password.regex' => 'Password must contain at least one uppercase, one lowercase, and one number.',
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed'
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password)
         ]);
 
-        Auth::login($user);
-        $user->sendEmailVerificationNotification();
+        // Comment out or remove this line
+        // event(new Registered($user));
 
-        return redirect()->route('verification.notice')
-            ->with('success', 'Registration successful. We sent a verification link to your email.');
+        Auth::login($user);
+
+        return redirect()->route('dashboard')->with('success', 'Registration successful!');
     }
 
+    // Show Login Form
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    // Handle Login
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-            'remember' => ['nullable', 'boolean'],
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
-
-        if ($user?->isLocked()) {
-            return back()->withInput($request->only('email'))
-                ->with('fail', 'Account locked. Try again after '.$user->locked_until->diffForHumans().'.');
+        if (Auth::attempt($request->only('email', 'password'), $request->remember)) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard'));
         }
 
-        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            if ($user) {
-                $attempts = $user->failed_login_attempts + 1;
-                $updates = ['failed_login_attempts' => $attempts];
-
-                if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
-                    $updates['locked_until'] = now()->addMinutes(self::LOCK_MINUTES);
-                }
-
-                $user->forceFill($updates)->save();
-            }
-
-            return back()->withInput($request->only('email'))
-                ->with('fail', 'Invalid email or password.');
-        }
-
-        $request->session()->regenerate();
-        $request->user()->forceFill([
-            'failed_login_attempts' => 0,
-            'locked_until' => null,
-        ])->save();
-
-        return redirect()->intended(route('dashboard'));
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
+    // Handle Logout
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return redirect()->route('login')->with('success', 'You have been logged out.');
+        return redirect('/login');
     }
 }
