@@ -64,3 +64,4 @@ Route::get('test-email', function () {
         return '❌ Error: ' . $e->getMessage();
     }
 });
+
